@@ -246,5 +246,13 @@ updateUi(currentAcc);
     return timer;
   }
 
+btnLoan.addEventListener('click',(e)=>{
+  e.preventDefault();
 
+  let iV= Number(inputLoanAmount.value);
+  if(iV>0){
+  currentAcc.movements.push(iV)
+  console.log(currentAcc.movements)
+  updateUi(currentAcc);}
+})
   
