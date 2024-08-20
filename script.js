@@ -6,28 +6,28 @@
 
 // Data
 const account1 = {
-  owner: 'Jonas Schmedtmann',
+  owner: 'Shathan manyu',
   movements: [200, 450, -400, 3000, -650, -130, 70, 1300],
   interestRate: 1.2, // %
   pin: 1111,
 };
 
 const account2 = {
-  owner: 'Jessica Davis',
+  owner: 'james cameron',
   movements: [5000, 3400, -150, -790, -3210, -1000, 8500, -30],
   interestRate: 1.5,
   pin: 2222,
 };
 
 const account3 = {
-  owner: 'Steven Thomas Williams',
+  owner: 'M odda ',
   movements: [200, -200, 340, -300, -20, 50, 400, -460],
   interestRate: 0.7,
   pin: 3333,
 };
 
 const account4 = {
-  owner: 'Sarah Smith',
+  owner: 'B sivaji',
   movements: [430, 1000, 700, 50, 90],
   interestRate: 1,
   pin: 4444,
@@ -76,9 +76,11 @@ const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
 /////////////////////////////////////////////////
 
  
-const displayMv=(movement)=>{
+const displayMv=(movement,sort=false)=>{
 containerMovements.innerHTML='';
-movement.forEach(function(mv,i){
+const movs=sort ? movement.slice().sort((a,b)=>a-b):movement;
+console.log(`sorted :${movs}`)
+movs.forEach(function(mv,i){
 let type=mv>0?'deposit':'withdrawal';
 
 let html=`<div class="movements__row">
@@ -102,29 +104,36 @@ const user=(accs)=>{
 user(accounts);
 console.log(accounts)
 
-const caldeposits=(acc)=>{
+const displayAcc=(acc)=>{
+
   let income=acc.movements
   .filter(mov=>mov>0)
   .reduce((acc,mov)=>acc+mov);
   labelSumIn.textContent=`${income}`
   console.log(income)
 
-movements.filter(mov=> {return mov>0;})}
+movements.filter(mov=> {return mov>0;})
 
-let calBalance=(acc)=>{
+
   acc.balance = acc.movements.reduce((acc, mov) => acc + mov, 0);
   labelBalance.textContent= `$${acc.balance}`;
+
+
+const interest = acc.movements
+.filter(mov => mov > 0)
+.map(deposit => (deposit * acc.interestRate) / 100)
+.filter((int, i, arr) => {
+  // console.log(arr);
+  return int >= 1;
+})
+.reduce((acc, int) => acc + int, 0);
+labelSumInterest.textContent = `${interest}€`;
+
+const withdrawal=acc.movements
+.filter(mov=> mov < 0)
+.reduce((acc,mov)=>acc+mov);
+labelSumOut.textContent=`${withdrawal}`
 }
-
-
-let interestRateD=(acc)=>{
-  acc.movements.filter(mov=>mov>0).map(deposites=>deposites*acc.interestRate).filter((int,i,arr)=>{
-    return int>=1
-  })
-.reduce((acc,int)=>acc+int,0);
-labelSumInterest.textContent(`${interestRateD}`)
-}
-
 /*
 const calcAverageHumanAge=(ages)=>{
   const humanAge=ages.map(age=> (age <=2?2*age:16+age*4));
@@ -144,19 +153,98 @@ const totalDep=movements.filter(mov=>mov>0).map(map=>map*eur).reduce((acc,mv)=>a
 
  */
 
-
+const updateUi=(currentAcc)=>{
+  displayMv(currentAcc.movements);
+  displayAcc(currentAcc);
+  startLogOutTimer();}
 let currentAcc;
+let timer;
+let xyz=()=>{
+  let now=new Date();
+  let day=now.getDate();
+  let year=now.getFullYear();
+  let month=now.getMonth();
+  let hour=now.getHours();
+  let min=now.getMinutes();
+ return `${day}/${month+1}/${year},${hour}:${min}`
+}
 btnLogin.addEventListener('click',(e)=>{
   e.preventDefault();
-
+  labelDate.textContent=xyz();
+  if(timer)clearInterval(timer);
+  timer=  startLogOutTimer();
   currentAcc=accounts.find(acc=>acc.username===inputLoginUsername.value);
   if(currentAcc?.pin===Number(inputLoginPin.value)){
   console.log(currentAcc);
   containerApp.style.opacity=100; 
   labelWelcome.textContent=`HELLO WELCOME ${currentAcc.owner}`
     inputLoginUsername.value=inputLoginPin.value=''
-  displayMv(currentAcc.movements);
-  calBalance(currentAcc)
-  caldeposits(currentAcc)
-  interestRateD(currentAcc)
-  }})
+    startLogOutTimer();
+updateUi(currentAcc);
+  }else{
+    console.log(`USER NOT FOUND`)
+  }});
+
+  btnTransfer.addEventListener('click',(e)=>{
+    e.preventDefault();
+    const amount=inputTransferAmount.value;
+    const toAcc=accounts.find(acc=>acc.username===inputTransferTo.value);
+    inputTransferAmount.value=inputTransferTo.value=''
+    if(amount> 0 && currentAcc.username !== toAcc.username){
+      console.log(`Done`)
+        toAcc.movements.push(amount)
+        currentAcc.movements.push(-amount)
+        updateUi(currentAcc);
+    }else{
+      console.log(`Failuer`)
+    }
+  })
+
+  btnClose.addEventListener('click',(e)=>{
+    e.preventDefault();
+    console.log(`${currentAcc.username}`)
+    console.log(currentAcc.pin)
+    if (inputCloseUsername.value===currentAcc.username && Number(inputClosePin.value)===currentAcc.pin){
+      console.log(`correct`);
+      const index=accounts.findIndex(acc=>acc.username===currentAcc.username)
+      accounts.splice(index)
+      console.log(`inex is ${index}`)
+      containerApp.style.opacity=0;}else{
+      console.log(`notCorrect`)
+      
+    }
+  })
+  let sorted=false;
+  btnSort.addEventListener('click',(e)=>{
+    e.preventDefault();
+    displayMv(movements,!sorted);
+    sorted=!sorted;
+    console.log(!sorted)
+  })
+
+/* 
+  let a=[1,2,3,4,5,6,7,8
+  console.log(a.map(acc=>acc))
+
+  const y=Array.from({length:13},(_,i)=>i+1);
+  console.log(y) */
+
+  const startLogOutTimer=function(){
+    let time=120;
+    let tick=()=>{const min =String(Math.trunc(time/60)).padStart(2,0);
+    const sec =String(Math.trunc(time%60)).padStart(2,0);
+    labelTimer.textContent=(`${min}:${sec}`);
+    time--;
+    if(time===0){
+      clearInterval(timer)
+      containerApp.style.opacity=0;
+      labelWelcome.textContent='login again to continue';
+    }
+  }
+  tick();
+    let timer=setInterval(tick,1000);
+    return timer;
+  }
+
+
+  
